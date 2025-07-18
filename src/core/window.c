@@ -665,29 +665,27 @@ meta_window_new_with_attrs (MetaDisplay       *display,
    * much we can do...except record the current time so that any children
    * can use this time as a fallback.
    */
-  if (!window->net_wm_user_time_set) {
-    MetaWindow *parent = NULL;
-    if (window->xtransient_for)
-      parent = meta_display_lookup_x_window (window->display,
-                                             window->xtransient_for);
+  MetaWindow *parent = NULL;
+  if (window->xtransient_for)
+    parent = meta_display_lookup_x_window (window->display,
+                                           window->xtransient_for);
 
-    /* First, maybe the app was launched with startup notification using an
-     * obsolete version of the spec; use that timestamp if it exists.
+  /* First, maybe the app was launched with startup notification using an
+   * obsolete version of the spec; use that timestamp if it exists.
+   */
+  if (window->initial_timestamp_set)
+    /* NOTE: Do NOT toggle net_wm_user_time_set to true; this is just
+     * being recorded as a fallback for potential transients
      */
-    if (window->initial_timestamp_set)
-      /* NOTE: Do NOT toggle net_wm_user_time_set to true; this is just
-       * being recorded as a fallback for potential transients
-       */
-      window->net_wm_user_time = window->initial_timestamp;
-    else if (parent != NULL)
-      meta_window_set_user_time(window, parent->net_wm_user_time);
-    else
-      /* NOTE: Do NOT toggle net_wm_user_time_set to true; this is just
-       * being recorded as a fallback for potential transients
-       */
-      window->net_wm_user_time =
-        meta_display_get_current_time_roundtrip (window->display);
-  }
+    window->net_wm_user_time = window->initial_timestamp;
+  else if (parent != NULL)
+    meta_window_set_user_time(window, parent->net_wm_user_time);
+  else
+    /* NOTE: Do NOT toggle net_wm_user_time_set to true; this is just
+     * being recorded as a fallback for potential transients
+     */
+    window->net_wm_user_time =
+      meta_display_get_current_time_roundtrip (window->display);
 
   if (window->decorated)
     meta_window_ensure_frame (window);
